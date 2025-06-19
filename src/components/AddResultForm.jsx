@@ -1,65 +1,123 @@
 import React, { useState } from 'react';
 import { useStudentContext } from '../contexts/StudentContext';
-import { useNavigate } from 'react-router-dom';
 
+// Liste des matières disponibles
 const SUBJECTS = [
-  'Math',
+  'Mathématiques',
+  'Physique',
+  'Chimie',
   'Informatique',
-  'Droit',
-  'Finance',
   'Anglais',
-  'Économie'
+  'Économie',
+  'Droit',
+  'Management'
 ];
 
 const AddResultForm = () => {
-  const { students, results, setResults } = useStudentContext();
-  const [matricule, setMatricule] = useState('');
-  const [subject, setSubject] = useState('');
-  const [score, setScore] = useState('');
-  const [success, setSuccess] = useState('');
-  const navigate = useNavigate();
+  // Récupération des données et fonctions du contexte global
+  const { students, addResult } = useStudentContext();
 
-  const selectedStudent = students.find(s => s.matricule === matricule);
+  // État local pour les données du formulaire
+  const [form, setForm] = useState({
+    studentId: '',
+    subject: '',
+    score: ''
+  });
 
+  // Gestion des changements dans les champs du formulaire
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Gestion de la soumission du formulaire
   const handleSubmit = e => {
     e.preventDefault();
-    if (!matricule || !subject || !score) return;
-    setResults([
-      ...results,
-      { id: Date.now(), studentId: selectedStudent.id, subject, score: Number(score) }
-    ]);
-    setMatricule('');
-    setSubject('');
-    setScore('');
-    setSuccess('Résultat ajouté !');
-    setTimeout(() => {
-      setSuccess('');
-      navigate('/search');
-    }, 1200);
+    // Vérification que tous les champs sont remplis
+    if (!form.studentId || !form.subject || !form.score) return;
+
+    // Ajout du nouveau résultat
+    addResult(form);
+
+    // Réinitialisation du formulaire
+    setForm({ studentId: '', subject: '', score: '' });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '2rem auto', padding: 20, border: '1px solid #eee', borderRadius: 8 }}>
-      <h3>Add Student Result</h3>
-      <select name="matricule" value={matricule} onChange={e => setMatricule(e.target.value)} required style={{ width: '100%', marginBottom: 8 }}>
-        <option value="">Select Matriculation Number</option>
-        {students.map(s => (
-          <option key={s.id} value={s.matricule}>{s.matricule}</option>
-        ))}
-      </select>
-      {selectedStudent && (
-        <div style={{ marginBottom: 8, color: '#3358e6' }}>
-          {selectedStudent.firstName} {selectedStudent.lastName}
+    <div className="card fade-in" style={{ maxWidth: 500, margin: '2rem auto' }}>
+      <div className="card-header">
+        <h2 className="card-title">Ajouter un résultat</h2>
+        <i className="fa-solid fa-chart-simple" style={{ fontSize: '1.8rem', color: 'var(--primary)' }}></i>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ padding: '2rem' }}>
+        <div className="form-group">
+          <label htmlFor="studentId">
+            <i className="fa-solid fa-user-graduate" style={{ marginRight: '8px', color: 'var(--gray-600)' }}></i>
+            Étudiant
+          </label>
+          <select
+            id="studentId"
+            name="studentId"
+            value={form.studentId}
+            onChange={handleChange}
+            required
+            className="slide-in"
+          >
+            <option key="default-student" value="">Sélectionnez un étudiant</option>
+            {students.map(student => (
+              <option key={student.id} value={student.id}>
+                {student.firstName || student.nom} {student.lastName || student.prenom} - {student.matricule}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
-      <select name="subject" value={subject} onChange={e => setSubject(e.target.value)} required style={{ width: '100%', marginBottom: 8 }}>
-        <option value="">Select Subject</option>
-        {SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-      </select>
-      <input name="score" type="number" placeholder="Score" value={score} onChange={e => setScore(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-      <button type="submit" style={{ width: '100%', marginTop: 8 }}>Add Result</button>
-      {success && <div className="success">{success}</div>}
+
+        <div className="form-group">
+          <label htmlFor="subject">
+            <i className="fa-solid fa-book" style={{ marginRight: '8px', color: 'var(--gray-600)' }}></i>
+            Matière
+          </label>
+          <select
+            id="subject"
+            name="subject"
+            value={form.subject}
+            onChange={handleChange}
+            required
+            className="slide-in"
+          >
+            <option key="default-subject" value="">Sélectionnez une matière</option>
+            {SUBJECTS.map(subject => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="score">
+            <i className="fa-solid fa-graduation-cap" style={{ marginRight: '8px', color: 'var(--gray-600)' }}></i>
+            Note (sur 20)
+          </label>
+          <input
+            id="score"
+            name="score"
+            type="number"
+            min="0"
+            max="20"
+            step="0.5"
+            placeholder="Ex: 15.5"
+            value={form.score}
+            onChange={handleChange}
+            required
+            className="slide-in"
+          />
+        </div>
+
+        <button type="submit" className="success slide-in">
+          <i className="fa-solid fa-plus" style={{ marginRight: '8px' }}></i>
+          Ajouter le résultat
+        </button>
     </form>
+    </div>
   );
 };
 
